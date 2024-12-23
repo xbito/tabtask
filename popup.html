@@ -1,0 +1,51 @@
+<html>
+  <head>
+    <title>TabTask</title>
+    <style>
+      button {
+        padding: 10px;
+        background-color: #3C79F8;
+        display: inline-block;
+      }
+      #taskForm {
+        margin-top: 1em;
+      }
+      #taskForm label {
+        display: block;
+        margin-bottom: 0.5em;
+      }
+      #taskForm input[name='title'] {
+        width: 300px;
+      }
+      #taskForm textarea[name='notes'] {
+        width: 300px;
+        height: 100px;
+      }
+    </style>
+    <script type="text/javascript" src="oauth.js"></script>
+  </head>
+  <body>
+    <h1>TabTask</h1>
+    <button id="createTaskBtn">Prepare Task</button>
+    <form id="taskForm" style="display:none;">
+      <label>Task List:
+        <select name="parent"></select>
+      </label>
+      <br/>
+      <label>Title:
+        <input type="text" name="title" />
+      </label>
+      <br/>
+      <label>Notes:
+        <textarea name="notes"></textarea>
+      </label>
+      <br/>
+      <label>
+        <button type="button" id="saveTaskBtn">Create Task</button>
+      </label>
+    </form>
+    <!-- New confirmation area -->
+    <div id="confirmation" style="display:none; margin-top: 1em;"></div>
+    <script src="popup.js"></script>
+  </body>
+</html>
