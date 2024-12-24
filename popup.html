@@ -21,12 +21,17 @@
         width: 300px;
         height: 100px;
       }
+      #loadingIndicator {
+        display: none;
+        margin-top: 1em;
+      }
     </style>
     <script type="text/javascript" src="oauth.js"></script>
   </head>
   <body>
     <h1>TabTask</h1>
     <button id="createTaskBtn">Prepare Task</button>
+    <div id="loadingIndicator">Loading...</div>
     <form id="taskForm" style="display:none;">
       <label>Task List:
         <select name="parent"></select>

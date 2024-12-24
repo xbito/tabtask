@@ -2,6 +2,7 @@ let globalToken = null; // Store the token for reuse
 
 document.getElementById("createTaskBtn").addEventListener("click", () => {
     console.log("Requesting current tab info...");
+    document.getElementById("loadingIndicator").style.display = "block"; // Show loading indicator
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const currentTab = tabs[0];
         
@@ -27,6 +28,7 @@ document.getElementById("createTaskBtn").addEventListener("click", () => {
             globalToken = token;
             if (chrome.runtime.lastError) {
                 console.error("OAuth error while fetching tasks:", chrome.runtime.lastError);
+                document.getElementById("loadingIndicator").style.display = "none"; // Hide loading indicator
                 return;
             }
             fetch("https://www.googleapis.com/tasks/v1/users/@me/lists", {
@@ -127,17 +129,27 @@ which action is the user most likely to take later? Options include Watch, Read,
                                 form.querySelector("textarea[name='notes']").value = taskObj.notes;
                                 form.querySelector("select[name='parent']").value = taskObj.parent;
                                 form.style.display = "block";
-                                // ...create the task here...
+                                document.getElementById("loadingIndicator").style.display = "none"; // Hide loading indicator
                             });
                         })
-                        .catch(err => console.error("Action fetch error:", err));
+                        .catch(err => {
+                            console.error("Action fetch error:", err);
+                            document.getElementById("loadingIndicator").style.display = "none"; // Hide loading indicator
+                        });
                     } else {
                         console.error("No matching list found for title:", chosenTitle);
+                        document.getElementById("loadingIndicator").style.display = "none"; // Hide loading indicator
                     }
                 })
-                .catch(err => console.error("Local LLM error:", err));
+                .catch(err => {
+                    console.error("Local LLM error:", err);
+                    document.getElementById("loadingIndicator").style.display = "none"; // Hide loading indicator
+                });
             })
-            .catch(error => console.error("Fetch error:", error));
+            .catch(error => {
+                console.error("Fetch error:", error);
+                document.getElementById("loadingIndicator").style.display = "none"; // Hide loading indicator
+            });
         });
 
     });
