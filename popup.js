@@ -89,8 +89,7 @@ Which Google Task list is best suited for it? Only respond with the list title, 
                             body: JSON.stringify({
                                 model: "llama3.1",
                                 stream: false,
-                                prompt: `Given the URL "${finalUrl}" and title "${finalTitle}",
-which action is the user most likely to take later? Options include Watch, Read, Apply, or anything else you think might fit. Respond with just 1 verb.`
+                                prompt: `Given the URL "${finalUrl}" and title "${finalTitle}", which action is the user most likely to take later? Options include Watch, Read, Apply, or anything else you think might fit. When the page seems to be a job ad, the right verb is Apply Respond with just 1 verb.`
                             })
                         })
                         .then(actionRes => actionRes.json())
