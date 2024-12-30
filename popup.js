@@ -158,8 +158,18 @@ document.getElementById("saveTaskBtn").addEventListener("click", () => {
     // Retrieve the data from the form
     const form = document.getElementById("taskForm");
     const parentId = form.querySelector("select[name='parent']").value;
-    const title = form.querySelector("input[name='title']").value;
-    const notes = form.querySelector("textarea[name='notes']").value;
+    const title = form.querySelector("input[name='title']").value.trim();
+    const notes = form.querySelector("textarea[name='notes']").value.trim();
+
+    // Validate form fields
+    if (!title) {
+        alert("Title cannot be empty.");
+        return;
+    }
+    if (!notes) {
+        alert("Notes cannot be empty.");
+        return;
+    }
 
     // Create task in Google Tasks
     fetch(`https://www.googleapis.com/tasks/v1/lists/${parentId}/tasks`, {
