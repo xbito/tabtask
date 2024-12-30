@@ -89,12 +89,21 @@ Which Google Task list is best suited for it? Only respond with the list title, 
                             body: JSON.stringify({
                                 model: "llama3.1",
                                 stream: false,
-                                prompt: `Given the URL "${finalUrl}" and title "${finalTitle}", which action is the user most likely to take later? Options include Watch, Read, Apply, or anything else you think might fit. When the page seems to be a job ad, the right verb is Apply Respond with just 1 verb.`
+                                prompt: `Given the URL "${finalUrl}" and title "${finalTitle}", which action is the user most likely to take later? Options include Watch, Read, Apply, or anything else you think might fit. When the page seems to be a job ad, the right verb is Apply. Respond with just 1 verb.`
                             })
                         })
                         .then(actionRes => actionRes.json())
                         .then(actionData => {
                             console.log("Local LLM suggestion (action):", actionData.response);
+
+                            // If the LLM detects a job ad and suggests "Apply", set the due date to tomorrow
+                            if (actionData.response && /apply/i.test(actionData.response.trim())) {
+                                const tomorrow = new Date();
+                                tomorrow.setDate(tomorrow.getDate() + 1);
+                                const formattedDue = tomorrow.toISOString().split("T")[0];
+                                const form = document.getElementById("taskForm");
+                                form.querySelector("input[name='dueDate']").value = formattedDue;
+                            }
 
                             // Decide whether to summarize the title
                             let finalTitlePromise;
