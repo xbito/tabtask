@@ -160,6 +160,12 @@ document.getElementById("saveTaskBtn").addEventListener("click", () => {
     const parentId = form.querySelector("select[name='parent']").value;
     const title = form.querySelector("input[name='title']").value.trim();
     const notes = form.querySelector("textarea[name='notes']").value.trim();
+    const dueDate = form.querySelector("input[name='dueDate']").value;
+    let dueValue = null;
+    if (dueDate) {
+        // Convert to a valid datetime string (RFC 3339)
+        dueValue = new Date(dueDate).toISOString();
+    }
 
     // Validate form fields
     if (!title) {
@@ -178,7 +184,7 @@ document.getElementById("saveTaskBtn").addEventListener("click", () => {
             Authorization: `Bearer ${globalToken}`,
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ title, notes })
+        body: JSON.stringify({ title, notes, due: dueValue })
     })
     .then(res => res.json())
     .then(data => {
