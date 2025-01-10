@@ -1,36 +1,54 @@
 let globalToken = null; // Store the token for reuse
+let selectedModel = "llama3.1"; // Default model
+
+document.getElementById("openSettingsBtn").addEventListener("click", () => {
+    chrome.runtime.openOptionsPage();
+});
+
+
 
 document.getElementById("createTaskBtn").addEventListener("click", () => {
+    // Load model from storage on popup load
+    console.log("Loading model settings from local storage...");
+    chrome.storage.local.get(["selectedModel"], (result) => {
+        if (chrome.runtime.lastError) {
+            console.error("Error accessing chrome.storage:", chrome.runtime.lastError);
+            return; // Handle the error gracefully
+        }
+        if (result.selectedModel) {
+            selectedModel = result.selectedModel;
+            console.log("Loaded model:", selectedModel);
+        }
+    });
     console.log("Requesting current tab info...");
     document.getElementById("loadingIndicator").style.display = "block"; // Show loading indicator
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        const currentTab = tabs[0];
-        
-        // Clean up title/URL if it's a YouTube link
-        let finalTitle = currentTab.title;
-        let finalUrl = currentTab.url;
-        if (finalUrl.includes("youtube.com") || finalUrl.includes("youtu.be")) {
-            // Remove '- YouTube' suffix
-            finalTitle = finalTitle.replace(/ - YouTube$/, "");
-            // Remove parenthetical digits if present, e.g. (3)
-            finalTitle = finalTitle.replace(/\(\d+\)/g, "");
-            // Remove time param from URL
-            const urlObj = new URL(finalUrl);
-            urlObj.searchParams.delete("t");
-            finalUrl = urlObj.href;
-        }
 
-        console.log("Current Tab Title:", finalTitle);
-        console.log("Current Tab URL:", finalUrl);
-        
-        // First, get Google OAuth token and Task Lists
-        chrome.identity.getAuthToken({ interactive: true }, (token) => {
-            globalToken = token;
-            if (chrome.runtime.lastError) {
-                console.error("OAuth error while fetching tasks:", chrome.runtime.lastError);
-                document.getElementById("loadingIndicator").style.display = "none"; // Hide loading indicator
-                return;
+    // Check if we have a stored access token
+    chrome.storage.local.get(["accessToken"], (storage) => {
+        const token = storage.accessToken;
+        // Use the stored token instead of calling getAuthToken()
+        globalToken = token;
+
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            const currentTab = tabs[0];
+            
+            // Clean up title/URL if it's a YouTube link
+            let finalTitle = currentTab.title;
+            let finalUrl = currentTab.url;
+            if (finalUrl.includes("youtube.com") || finalUrl.includes("youtu.be")) {
+                // Remove '- YouTube' suffix
+                finalTitle = finalTitle.replace(/ - YouTube$/, "");
+                // Remove parenthetical digits if present, e.g. (3)
+                finalTitle = finalTitle.replace(/\(\d+\)/g, "");
+                // Remove time param from URL
+                const urlObj = new URL(finalUrl);
+                urlObj.searchParams.delete("t");
+                finalUrl = urlObj.href;
             }
+
+            console.log("Current Tab Title:", finalTitle);
+            console.log("Current Tab URL:", finalUrl);
+            
             fetch("https://www.googleapis.com/tasks/v1/users/@me/lists", {
                 headers: { Authorization: `Bearer ${token}` }
             })
@@ -54,11 +72,11 @@ document.getElementById("createTaskBtn").addEventListener("click", () => {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        model: "llama3.1",
+                        model: selectedModel,
                         stream: false,
                         prompt: `Given this tab title: ${finalTitle}
 And here are the user's Task List titles: ${JSON.stringify(listTitles)}
-Which Google Task list is best suited for it? Only respond with the list title, nothing else.`
+Which Google Task list is best suited for it? Only respond with the list title, nothing else. Only use one of the provided list titles or 'Default List' if none match.`
                     })
                 })
                 .then(res => res.json())
@@ -87,9 +105,9 @@ Which Google Task list is best suited for it? Only respond with the list title, 
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({
-                                model: "llama3.1",
+                                model: selectedModel,
                                 stream: false,
-                                prompt: `Given the URL "${finalUrl}" and title "${finalTitle}", which action is the user most likely to take later? Options include Watch, Read, Apply, or anything else you think might fit. When the page seems to be a job ad, the right verb is Apply. Respond with just 1 verb.`
+                                prompt: `Given the URL "${finalUrl}" and title "${finalTitle}", which action is the user most likely to take later? Options include Watch, Read, Apply, or anything else you think might fit. When the page seems to be a job ad, the right verb is Apply. Respond with just 1 verb. Do not provide any explnation or further information, just the action verb.`
                             })
                         })
                         .then(actionRes => actionRes.json())
@@ -112,7 +130,7 @@ Which Google Task list is best suited for it? Only respond with the list title, 
                                     method: "POST",
                                     headers: { "Content-Type": "application/json" },
                                     body: JSON.stringify({
-                                        model: "llama3.1",
+                                        model: selectedModel,
                                         stream: false,
                                         prompt: `Summarize this title to under 80 characters:\n"${finalTitle}". Respond with just the summarized title.`
                                     })
